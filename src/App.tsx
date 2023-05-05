@@ -47,7 +47,7 @@ export const App = () => {
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [contrastRatios, handleAnswer]);
+  }, [handleAnswer]);
 
   return (
     <main
