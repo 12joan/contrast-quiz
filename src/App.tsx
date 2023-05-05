@@ -1,8 +1,20 @@
 import { useState } from 'react';
 import getLuminance from 'relative-luminance';
 import { loremIpsum } from 'lorem-ipsum';
+import Tippy, { useSingleton } from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/themes/light.css';
+
+type PassLevel = 'fail' | 'pass' | 'good';
 
 const contrastRatios = [1.5, 3, 4.5, 7];
+
+const contrastRatioPassLevels: Record<number, { largeText: PassLevel, normalText: PassLevel }> = {
+  1.5: { largeText: 'fail', normalText: 'fail' },
+  3: { largeText: 'pass', normalText: 'fail' },
+  4.5: { largeText: 'good', normalText: 'pass' },
+  7: { largeText: 'good', normalText: 'good' },
+};
 
 const sample = <T,>(array: T[]): T => array[Math.floor(Math.random() * array.length)];
 
@@ -77,13 +89,25 @@ const useQuizData = (): QuizData & { showNext: () => void } => {
 };
 
 export const App = () => {
-  const { contrast, backgroundColor, textColor, largeText, normalText, showNext } = useQuizData();
+  const {
+    contrast,
+    backgroundColor,
+    textColor,
+    largeText,
+    normalText,
+    showNext,
+  } = useQuizData();
+
+  const [wrongAnswers, setWrongAnswers] = useState<number[]>([]);
+
+  const [tippySource, tippyTarget] = useSingleton();
 
   const handleAnswer = (answer: number) => {
     if (answer === contrast) {
       showNext();
+      setWrongAnswers([]);
     } else {
-      alert('Wrong answer!');
+      setWrongAnswers([...wrongAnswers, answer]);
     }
   };
 
@@ -110,16 +134,41 @@ export const App = () => {
       </div>
 
       <div className="flex flex-wrap items-start justify-center gap-3 text-center">
-        {contrastRatios.map((c) => (
-          <button
-            key={c}
-            type="button"
-            className="bg-white px-10 py-3 rounded-lg hover:bg-gray-200 outline-none focus-visible:ring-2 ring-offset-2 ring-white ring-offset-black"
-            onClick={() => handleAnswer(c)}
-          >
-            {getContrastText(c)}
-          </button>
-        ))}
+        <Tippy singleton={tippySource} theme="light" placement="top" />
+
+        {contrastRatios.map((contrast) => {
+          const {
+            largeText: largeTextPassLevel,
+            normalText: normalTextPassLevel,
+          } = contrastRatioPassLevels[contrast];
+
+          const isWrongAnswer = wrongAnswers.includes(contrast);
+
+          return (
+            <Tippy
+              key={contrast}
+              content={
+                <div className="text-center">
+                  <p>Large text: {largeTextPassLevel}</p>
+                  <p>Normal text: {normalTextPassLevel}</p>
+                </div>
+              }
+              singleton={tippyTarget}
+            >
+              <button
+                type="button"
+                className="bg-white px-10 py-3 rounded-lg enabled:hover:bg-gray-200 outline-none focus-visible:ring-2 ring-offset-2 ring-white ring-offset-black disabled:opacity-50 transition-all duration-300"
+                style={{
+                  cursor: isWrongAnswer ? 'not-allowed' : undefined,
+                }}
+                disabled={isWrongAnswer}
+                onClick={() => handleAnswer(contrast)}
+              >
+                {getContrastText(contrast)}
+              </button>
+            </Tippy>
+          );
+        })}
       </div>
     </main>
   );
