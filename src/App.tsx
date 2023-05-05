@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import getLuminance from 'relative-luminance';
-import { loremIpsum } from 'lorem-ipsum';
 import Tippy, { useSingleton } from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
@@ -50,8 +49,6 @@ type QuizData = {
   contrast: number;
   backgroundColor: Color;
   textColor: Color;
-  largeText: string;
-  normalText: string;
 };
 
 const maxAttempts = 10000;
@@ -67,9 +64,7 @@ const generateQuizData = (): QuizData => {
     const luminanceB = sample(luminancesB);
     const colorB = getGrayscaleColor(luminanceB);
     const [backgroundColor, textColor] = Math.random() < 0.5 ? [colorA, colorB] : [colorB, colorA];
-    const largeText = loremIpsum({ count: 1, units: 'sentences' });
-    const normalText = loremIpsum({ count: 1, units: 'paragraphs' });
-    return { contrast, backgroundColor, textColor, largeText, normalText };
+    return { contrast, backgroundColor, textColor };
   }
 
   throw new Error('Failed to generate quiz data');
@@ -93,8 +88,6 @@ export const App = () => {
     contrast,
     backgroundColor,
     textColor,
-    largeText,
-    normalText,
     showNext,
   } = useQuizData();
 
@@ -124,7 +117,7 @@ export const App = () => {
 
   return (
     <main
-      className="min-h-screen p-5 flex flex-col items-center gap-10"
+      className="min-h-screen p-5 flex flex-col items-center gap-10 transition-colors duration-300"
       style={{
         backgroundColor: getCSSColor(backgroundColor),
       }}
@@ -138,9 +131,16 @@ export const App = () => {
       </div>
 
       <div className="grow flex">
-        <div className="m-auto text-center max-w-screen-sm" style={{ color: getCSSColor(textColor) }}>
-          <p style={{ fontSize: '18pt' }}>{largeText}</p>
-          <p>{normalText}</p>
+        <div
+          className="m-auto text-center max-w-screen-sm transition-colors duration-300"
+          style={{ color: getCSSColor(textColor) }}
+        >
+          <p style={{ fontSize: '18pt' }}>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit
+          </p>
+          <p>
+            In eu posuere lectus. Quisque sollicitudin augue sit amet orci ullamcorper sagittis. Praesent facilisis vel turpis vitae sodales. Nunc et turpis arcu. Nulla malesuada nisi urna, nec tempus sem lobortis vel. Donec mollis elementum porttitor. Praesent id eros sed purus vehicula lacinia. Fusce sem lectus, varius vel lorem nec, scelerisque malesuada est. Maecenas mollis ultricies turpis, non bibendum erat condimentum non. Nam facilisis neque vitae tempus vestibulum. Mauris quam nulla, finibus a libero ut, tristique euismod sapien.
+          </p>
         </div>
       </div>
 
