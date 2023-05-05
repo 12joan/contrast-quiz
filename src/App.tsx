@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import getLuminance from 'relative-luminance';
 import { loremIpsum } from 'lorem-ipsum';
 import Tippy, { useSingleton } from '@tippyjs/react';
@@ -78,9 +78,9 @@ const generateQuizData = (): QuizData => {
 const useQuizData = (): QuizData & { showNext: () => void } => {
   const [quizData, setQuizData] = useState<QuizData>(generateQuizData);
 
-  const showNext = () => {
+  const showNext = useCallback(() => {
     setQuizData(generateQuizData());
-  };
+  }, []);
 
   return {
     ...quizData,
@@ -102,14 +102,25 @@ export const App = () => {
 
   const [tippySource, tippyTarget] = useSingleton();
 
-  const handleAnswer = (answer: number) => {
+  const handleAnswer = useCallback((answer: number) => {
     if (answer === contrast) {
       showNext();
       setWrongAnswers([]);
     } else {
-      setWrongAnswers([...wrongAnswers, answer]);
+      setWrongAnswers((wrongAnswers) => [...wrongAnswers, answer]);
     }
-  };
+  }, [contrast, showNext]);
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const parsedKey = parseInt(event.key, 10);
+      if (parsedKey >= 1 && parsedKey <= contrastRatios.length) {
+        handleAnswer(contrastRatios[parsedKey - 1]);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [contrastRatios, handleAnswer]);
 
   return (
     <main
@@ -157,7 +168,7 @@ export const App = () => {
             >
               <button
                 type="button"
-                className="bg-white px-10 py-3 rounded-lg enabled:hover:bg-gray-200 outline-none focus-visible:ring-2 ring-offset-2 ring-white ring-offset-black disabled:opacity-50 transition-all duration-300"
+                className="bg-white px-10 py-3 rounded-lg enabled:hover:bg-gray-200 outline-none focus-visible:ring-2 ring-offset-2 ring-white ring-offset-black disabled:opacity-50 transition-all duration-300 shadow-lg"
                 style={{
                   cursor: isWrongAnswer ? 'not-allowed' : undefined,
                 }}
